@@ -17,8 +17,15 @@ import seaborn as sns
 import streamlit as st
 
 from sklearn.experimental import enable_hist_gradient_boosting  # noqa
-from sklearn import linear_model, ensemble
-from sklearn import metrics, preprocessing, pipeline, model_selection
+from sklearn import (
+    linear_model,
+    ensemble,
+    metrics,
+    preprocessing,
+    pipeline,
+    model_selection,
+    inspection
+)
 
 KNOWN_DATASETS = {
     "PXV_10_15_19 (lab-based)": (
@@ -189,19 +196,40 @@ def gradient_boosting(df_train, df_test, target, features):
     #ax.ax_marg_x.set_title(f"Correlation of actual vs. predicted moments")
     st.pyplot()
 
-    # ind = np.arange(len(features))
-    # plt.bar(ind, np.abs(gboost.feature_importances_))
-    # plt.xticks(ind, features, rotation=90)
-    # plt.title("Relative feature importance with Gradient Boosting");
-    # plt.xlabel("Features")
-    # plt.ylabel("Relative Importance")
-    # st.pyplot()
 
-    # plt.figure()
-    # plt.plot(y_test, gboost.predict(X_test), 'k.', alpha=.2)
-    # plt.grid()
-    # plt.title(f"Correlation of predicted values with Gradient Boosting (MSE={mse:.2f})");
-    # st.pyplot()
+    st.sidebar.header("Feature importances")
+    do_imps = st.sidebar.checkbox(
+        "Compute Feature Importance", value=False)
+
+    if do_imps:
+        n_repeats = st.sidebar.number_input(
+            label="Repeats",
+            value=10,
+            min_value=1
+        )
+
+        st.header("Feature importances")
+        st.write("The permutation feature importance is defined to be the "
+                "decrease in a model score when a single feature value is "
+                "randomly shuffled.")
+
+        with st.spinner("Computing permutation importance...."):
+            imps = inspection.permutation_importance(
+                model,
+                X_test,
+                y_test,
+                n_repeats=n_repeats,
+                random_state=42,
+                n_jobs=-1
+            )
+            sorted_imps_idx = imps.importances_mean.argsort()
+
+        fig, ax = plt.subplots()
+        ax.boxplot(imps.importances[sorted_imps_idx].T,
+            vert=False, showfliers=False,
+            labels=X_test.columns[sorted_imps_idx])
+        fig.tight_layout()
+        st.pyplot()
 
 def main():
     """Life starts here"""
