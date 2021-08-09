@@ -25,7 +25,10 @@ def load_dataset(s3_uri_or_path):
         local_path = download_dataset(s3_uri_or_path)
     else:
         local_path = s3_uri_or_path
-    df = pd.read_csv(local_path)
+    if str(local_path.suffix).lower() == ".csv":
+        df = pd.read_csv(local_path)
+    elif str(local_path.suffix).lower() in (".xlsx", ".xls"):
+        df = pd.read_excel(local_path)
     return df
 
 ### Simple tests
