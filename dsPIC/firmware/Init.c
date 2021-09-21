@@ -94,4 +94,13 @@ void InitGPIO(void)
     TRISDbits.TRISD4 = 0;  //Pin 66
     TRISDbits.TRISD6 = 0; //Pin 68
     
+    // IMU (MPU-6050) on I2C1 
+    // Pin 47, SCL1/RG2
+    // Pin 46, SDA1/RG3
+    TRISGbits.TRISG2 = 0;   // output
+    TRISGbits.TRISG3 = 0;   
+    ODCGbits.ODCG2 = 1;     // open-drain
+	ODCGbits.ODCG3 = 1;
+    LATGbits.LATG2 = 1;     // default high (pulled-up)
+	LATGbits.LATG3 = 1;
 }

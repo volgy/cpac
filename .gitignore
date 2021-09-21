@@ -130,3 +130,5 @@ dmypy.json
 
 # CPAC specific
 ORIG/
+
+dsPIC/firmware/.generated_files

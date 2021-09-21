@@ -14,6 +14,8 @@ rev number: 0  date: 9/1/2013
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "I2C.h"
+#include "MPU6050.h"
 
 /* These are function prototypes, which define the proper usage
  of functions located in other files */
@@ -66,6 +68,7 @@ int main(void)
     Ecan1Init(); // Located in ECAN1Config.c
     ADCInit(); // Initialize ADC
     PWMInit(); // Initialize PWM
+    I2C_Init();
     
     // NEW
     
@@ -107,11 +110,21 @@ int main(void)
     LED3=LEDOFF;
     LED4=LEDOFF;
     LED5=LEDOFF;
+    
+    if (MPU6050_Init() == MPU6050_OK) {
+        LED2 = LEDOFF;
+    }
+    else {
+        LED2 = LEDON;
+    }
+    
+    
     Pin35 = 1;
     i = 0;
     ii = 0;
     solenoid_type = 0;
     prev = 1;
+    
     while (1)
     {
         dtemp=(int)POS1CNT; /* Temp duty cycle takes integer value of position 
@@ -149,9 +162,16 @@ int main(void)
         IFS0bits.T1IF = 0; // reset timer
         
         // Write data to send to Simulink via the CAN bus
-        gData[0] = AN_pin28;
-        gData[1] = AN_pin27;
-        gData[2] = AN_pin29;
+        //gData[0] = AN_pin28;
+        //gData[1] = AN_pin27;
+        //gData[2] = AN_pin29;
+        
+        MPU6050_Update();
+        gData[0] = accelX;
+        gData[1] = accelY;
+        gData[2] = accelZ;
+        
+        
         gData[3] = quad_read;
 
 
