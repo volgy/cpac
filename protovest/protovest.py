@@ -17,6 +17,7 @@ from can.interface import Bus
 
 from plotting import Plotter
 
+DECIMATION = 32
 BATCH_SIZE = 256
 N_FEATURES = 6  # gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z
 
@@ -82,13 +83,17 @@ def main():
 
     model = load_model()
 
+    csv_name = time.strftime("trial_%Y%m%d-%H%M%S.csv")
+
     with Bus(
         interface="vector",
         app_name="CPAC",
         channel=0,
         bitrate=1000000,
         fd=False,
-    ) as bus:
+    ) as bus, open(csv_name, "w") as csv_file:
+
+        csv_file.write("gyro_x,gyro_y,gyro_z,accel_x,accel_y,accel_z,mode\n")
 
         def cb_close(event):
             exit()
@@ -117,9 +122,10 @@ def main():
             y = model(torch.from_numpy(batch[np.newaxis, ...]).float()).view(-1).detach()
             soft_preds = torch.sigmoid(y).detach().numpy()
 
-            plot_data = np.append(batch, soft_preds[..., np.newaxis], axis=1)
-            decim = 32
-            plot_data = plot_data.reshape(decim, -1, N_FEATURES + 1).mean(axis=0)
+            all_data = np.append(batch, soft_preds[..., np.newaxis], axis=1)
+            np.savetxt(csv_file, all_data, delimiter=",", fmt='%.4e')
+
+            plot_data = all_data.reshape(DECIMATION, -1, N_FEATURES + 1).mean(axis=0)
             #print(plot_data)
             plotter.update(plot_data)
 
